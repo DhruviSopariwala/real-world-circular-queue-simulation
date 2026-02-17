@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circular Queue Simulation - Restaurant Waiting System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎫 Circular Queue Simulation</h1>
+        <p class="subtitle">Restaurant Waiting List System</p>
+
+        <div class="info-box">
+            <h3>Real-World Scenario</h3>
+            <p>Imagine a restaurant with 5 waiting seats. Customers arrive and take seats (enqueue), and when a table is ready, the first customer leaves (dequeue). When all seats are full, new customers must wait until someone leaves, even if earlier seats are empty!</p>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box legend-front"></div>
+                <span>Front (Next to serve)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box legend-rear"></div>
+                <span>Rear (Last added)</span>
+            </div>
+        </div>
+
+        <div class="queue-container">
+            <div class="queue-visual" id="queueVisual"></div>
+        </div>
+
+        <div class="message" id="message"></div>
+
+        <div class="controls">
+            <div class="input-group">
+                <input type="text" id="customerName" placeholder="Customer name" maxlength="10">
+                <button class="btn-enqueue" onclick="enqueue()">Add Customer</button>
+            </div>
+            <button class="btn-dequeue" onclick="dequeue()">Serve Customer</button>
+            <button class="btn-reset" onclick="reset()">Reset Queue</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Queue Size</div>
+                <div class="stat-value" id="size">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Front Index</div>
+                <div class="stat-value" id="front">-1</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Rear Index</div>
+                <div class="stat-value" id="rear">-1</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Capacity</div>
+                <div class="stat-value" id="capacity">5</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class CircularQueue {
+            constructor(capacity) {
+                this.capacity = capacity;
+                this.queue = new Array(capacity).fill(null);
+                this.front = -1;
+                this.rear = -1;
+                this.size = 0;
+            }
+
+            isEmpty() {
+                return this.size === 0;
+            }
+
+            isFull() {
+                return this.size === this.capacity;
+            }
+
+            enqueue(customer) {
+                if (this.isFull()) {
+                    return false;
+                }
+
+                if (this.isEmpty()) {
+                    this.front = 0;
+                    this.rear = 0;
+                } else {
+                    this.rear = (this.rear + 1) % this.capacity;
+                }
+
+                this.queue[this.rear] = customer;
+                this.size++;
+                return true;
+            }
+
+            dequeue() {
+                if (this.isEmpty()) {
+                    return null;
+                }
+
+                const customer = this.queue[this.front];
+                this.queue[this.front] = null;
+                
+                if (this.size === 1) {
+                    this.front = -1;
+                    this.rear = -1;
+                } else {
+                    this.front = (this.front + 1) % this.capacity;
+                }
+
+                this.size--;
+                return customer;
+            }
+
+            reset() {
+                this.queue = new Array(this.capacity).fill(null);
+                this.front = -1;
+                this.rear = -1;
+                this.size = 0;
+            }
+        }
+
+        const queue = new CircularQueue(5);
+
+        function renderQueue() {
+            const visual = document.getElementById('queueVisual');
+            visual.innerHTML = '';
+
+            for (let i = 0; i < queue.capacity; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'queue-slot';
+                
+                const index = document.createElement('div');
+                index.className = 'slot-index';
+                index.textContent = `[${i}]`;
+                slot.appendChild(index);
+
+                if (queue.queue[i]) {
+                    slot.classList.add('filled');
+                    const icon = document.createElement('div');
+                    icon.className = 'customer-icon';
+                    icon.textContent = '👤';
+                    slot.appendChild(icon);
+
+                    const name = document.createElement('div');
+                    name.className = 'customer-name';
+                    name.textContent = queue.queue[i];
+                    slot.appendChild(name);
+                }
+
+                if (i === queue.front && !queue.isEmpty()) {
+                    slot.classList.add('front');
+                }
+                if (i === queue.rear && !queue.isEmpty()) {
+                    slot.classList.add('rear');
+                }
+
+                visual.appendChild(slot);
+            }
+
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('size').textContent = queue.size;
+            document.getElementById('front').textContent = queue.front;
+            document.getElementById('rear').textContent = queue.rear;
+        }
+
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = `message ${type}`;
+            setTimeout(() => {
+                message.className = 'message';
+            }, 3000);
+        }
+
+        function enqueue() {
+            const input = document.getElementById('customerName');
+            const name = input.value.trim();
+
+            if (!name) {
+                showMessage('Please enter a customer name!', 'error');
+                return;
+            }
+
+            if (queue.enqueue(name)) {
+                showMessage(`${name} added to the waiting list!`, 'success');
+                input.value = '';
+                renderQueue();
+            } else {
+                showMessage('Queue is full! Please wait for a customer to be served.', 'error');
+            }
+        }
+
+        function dequeue() {
+            const customer = queue.dequeue();
+            if (customer) {
+                showMessage(`${customer} is being served! Table ready.`, 'success');
+                renderQueue();
+            } else {
+                showMessage('No customers in the queue!', 'error');
+            }
+        }
+
+        function reset() {
+            queue.reset();
+            document.getElementById('customerName').value = '';
+            showMessage('Queue has been reset!', 'success');
+            renderQueue();
+        }
+
+        // Allow Enter key to add customer
+        document.getElementById('customerName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                enqueue();
+            }
+        });
+
+        // Initial render
+        renderQueue();
+    </script>
+</body>
+</html>
