@@ -37,7 +37,7 @@ Imagine a restaurant with 5 waiting seats:
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/yourusername/real-world-circular-queue-simulation.git
+git clone https://github.com/DhruviSopariwala/real-world-circular-queue-simulation.git
 cd real-world-circular-queue-simulation
 ```
 
